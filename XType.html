@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XType-beta - Édition Microsoft</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --brand: #0078d4;
+            --brand-light: #e6f0fa;
+            --bg-app: #f3f2f1;
+            --bg-panel: #ffffff;
+            --text-main: #323130;
+            --text-secondary: #605e5c;
+            --border: #edebe9;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --hover-bg: rgba(0,0,0,0.05);
+            --notification-success: #107c10;
+            --notification-info: #0078d4;
+            --notification-warning: #ffb900;
+            --notification-error: #d13438;
+        }
+
+        [data-theme="dark"] {
+            --bg-app: #111111;
+            --bg-panel: #252423;
+            --text-main: #f3f2f1;
+            --text-secondary: #c8c6c4;
+            --border: #3b3a39;
+            --hover-bg: rgba(255,255,255,0.1);
+            --brand-light: #2b2b2b;
+            --notification-success: #4caf50;
+            --notification-info: #2196f3;
+            --notification-warning: #ffc107;
+            --notification-error: #f44336;
+        }
+
+        * {
+            transition: background-color 0.2s ease, color 0.1s ease;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* SYSTÈME DE NOTIFICATION CORRIGÉ */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+            pointer-events: none;
+        }
+
+        .notification {
+            background: var(--bg-panel);
+            color: var(--text-main);
+            border-radius: 6px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--brand);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+            pointer-events: auto;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .notification.success { border-left-color: var(--notification-success); }
+        .notification.info { border-left-color: var(--notification-info); }
+        .notification.warning { border-left-color: var(--notification-warning); }
+        .notification.error { border-left-color: var(--notification-error); }
+
+        .notification-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .notification.success .notification-icon { color: var(--notification-success); }
+        .notification.info .notification-icon { color: var(--notification-info); }
+        .notification.warning .notification-icon { color: var(--notification-warning); }
+        .notification.error .notification-icon { color: var(--notification-error); }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .notification-message {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 14px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .notification-close:hover {
+            background: var(--hover-bg);
+            color: var(--text-main);
+        }
+
+        .notification-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: var(--brand);
+            animation: progress 5s linear forwards;
+        }
+
+        .notification.success .notification-progress { background: var(--notification-success); }
+        .notification.info .notification-progress { background: var(--notification-info); }
+        .notification.warning .notification-progress { background: var(--notification-warning); }
+        .notification.error .notification-progress { background: var(--notification-error); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        @keyframes progress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
+
+        /* RIBBON AMÉLIORÉ */
+        .ribbon {
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 0 12px;
+            border-right: 1px solid var(--border);
+            position: relative;
+        }
+
+        .tool-group:last-child {
+            border-right: none;
+        }
+
+        .xtype-logo {
+            font-weight: 800;
+            color: var(--brand);
+            font-size: 1.4rem;
+            margin-right: 8px;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--brand), #106ebe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .ribbon button {
+            background: none;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 14px;
+            min-width: 32px;
+            position: relative;
+        }
+
+        .ribbon button:hover { 
+            background: var(--hover-bg);
+            border-color: var(--border);
+        }
+
+        .ribbon button.active {
+            background: var(--brand-light);
+            border-color: var(--brand);
+            color: var(--brand);
+        }
+
+        .ribbon select {
+            padding: 5px 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg-panel);
+            color: var(--text-main);
+            font-size: 13px;
+            cursor: pointer;
+            margin-right: 4px;
+        }
+
+        .ribbon select:hover {
+            border-color: var(--brand);
+        }
+
+        /* MENU FICHIER */
+        .file-menu-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-menu-button {
+            background: none;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .file-menu-button:hover {
+            background: var(--hover-bg);
+            border-color: var(--border);
+        }
+
+        .file-menu-button i {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .file-menu-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-shadow: var(--shadow);
+            min-width: 250px;
+            z-index: 1000;
+            display: none;
+            margin-top: 4px;
+            padding: 4px 0;
+        }
+
+        .file-menu-dropdown.show {
+            display: block;
+        }
+
+        .file-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-main);
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .file-menu-item:hover {
+            background: var(--hover-bg);
+        }
+
+        .file-menu-item i {
+            width: 20px;
+            color: var(--brand);
+            font-size: 14px;
+        }
+
+        .file-menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        .file-menu-shortcut {
+            margin-left: auto;
+            color: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        .status-bar {
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            padding: 4px 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ÉDITEUR */
+        .viewport {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            background: var(--bg-app);
+        }
+
+        #editor {
+            background: var(--bg-panel);
+            width: 210mm;
+            min-height: 297mm;
+            padding: 25mm;
+            box-shadow: var(--shadow);
+            color: var(--text-main);
+            outline: none;
+            line-height: 1.6;
+            font-size: 11pt;
+            border-radius: 2px;
+            caret-color: var(--brand);
+            font-family: Arial, 'Segoe UI', system-ui, sans-serif;
+        }
+
+        #editor:focus {
+            box-shadow: 0 8px 30px rgba(0,120,212,0.15);
+        }
+
+        [data-theme="dark"] #editor {
+            background: #1b1a19;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        }
+
+        /* STYLES DE TEXTE */
+        #editor h1 { font-size: 24pt; margin-top: 0; color: var(--brand); font-family: Arial, 'Segoe UI', sans-serif; }
+        #editor h2 { font-size: 18pt; border-bottom: 1px solid var(--border); padding-bottom: 6px; font-family: Arial, 'Segoe UI', sans-serif; }
+        #editor blockquote { 
+            border-left: 4px solid var(--brand); 
+            margin-left: 0; 
+            padding-left: 20px; 
+            color: var(--text-secondary);
+            font-style: italic;
+            font-family: Arial, 'Segoe UI', sans-serif;
+        }
+        #editor pre {
+            background: var(--bg-app);
+            padding: 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            border: 1px solid var(--border);
+            white-space: pre-wrap;
+        }
+        
+        #editor table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-family: Arial, 'Segoe UI', sans-serif;
+        }
+        
+        #editor table td, #editor table th {
+            border: 1px solid var(--text-secondary);
+            padding: 8px;
+        }
+        
+        #editor p, #editor li, #editor div {
+            font-family: Arial, 'Segoe UI', sans-serif;
+        }
+
+        /* BARRE LATÉRALE */
+        .sidebar-tools {
+            position: fixed;
+            right: 20px;
+            bottom: 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .sidebar-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .sidebar-btn::after {
+            content: attr(title);
+            position: absolute;
+            right: 60px;
+            background: var(--text-main);
+            color: var(--bg-panel);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 1000;
+        }
+        
+        .sidebar-btn:hover::after {
+            opacity: 1;
+        }
+
+        .sidebar-btn:hover {
+            background: var(--brand);
+            color: white;
+            border-color: var(--brand);
+            transform: translateY(-2px);
+        }
+
+        @media print {
+            .ribbon, .status-bar, .sidebar-tools, .no-print, .notification-container { display: none !important; }
+            body, .app-container { height: auto; overflow: visible; background: white; }
+            .viewport { padding: 0; display: block; overflow: visible; height: auto; }
+            #editor { box-shadow: none; width: 100%; min-height: 0; margin: 0; padding: 20mm; background: white; color: black; font-family: Arial, sans-serif; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- CONTENEUR DE NOTIFICATIONS CORRIGÉ -->
+        <div id="notification-container" class="notification-container"></div>
+
+        <header class="ribbon no-print">
+            <div class="xtype-logo">XType-beta</div>
+            
+            <!-- MENU FICHIER -->
+            <div class="file-menu-container">
+                <button class="file-menu-button" onclick="toggleFileMenu()">
+                    Fichier <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div id="file-menu" class="file-menu-dropdown">
+                    <div class="file-menu-item" onclick="createNewDoc()">
+                        <i class="fa-regular fa-file"></i>
+                        Nouveau
+                        <span class="file-menu-shortcut">Ctrl+N</span>
+                    </div>
+                    <div class="file-menu-item" onclick="openDocument()">
+                        <i class="fa-regular fa-folder-open"></i>
+                        Ouvrir...
+                        <span class="file-menu-shortcut">Ctrl+O</span>
+                    </div>
+                    <div class="file-menu-item" onclick="saveDocument()">
+                        <i class="fa-regular fa-floppy-disk"></i>
+                        Enregistrer
+                        <span class="file-menu-shortcut">Ctrl+S</span>
+                    </div>
+                    <div class="file-menu-item" onclick="showSaveAsDialog()">
+                        <i class="fa-regular fa-file-export"></i>
+                        Enregistrer sous...
+                        <span class="file-menu-shortcut">Ctrl+Shift+S</span>
+                    </div>
+                    <div class="file-menu-divider"></div>
+                    <div class="file-menu-item" onclick="handleExport('pdf')">
+                        <i class="fa-regular fa-file-pdf"></i>
+                        Exporter en PDF
+                    </div>
+                    <div class="file-menu-item" onclick="handleExport('html')">
+                        <i class="fa-regular fa-file-code"></i>
+                        Exporter en HTML
+                    </div>
+                    <div class="file-menu-item" onclick="handleExport('txt')">
+                        <i class="fa-regular fa-file-lines"></i>
+                        Exporter en TXT
+                    </div>
+                    <div class="file-menu-divider"></div>
+                    <div class="file-menu-item" onclick="handleExport('doc')">
+                        <i class="fa-regular fa-file-word"></i>
+                        Exporter en DOC
+                    </div>
+                    <div class="file-menu-item" onclick="handleExport('rtf')">
+                        <i class="fa-regular fa-file"></i>
+                        Exporter en RTF
+                    </div>
+                    <div class="file-menu-divider"></div>
+                    <div class="file-menu-item" onclick="printDocument()">
+                        <i class="fa-regular fa-print"></i>
+                        Imprimer
+                        <span class="file-menu-shortcut">Ctrl+P</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <button onclick="exec('bold')" id="btn-bold" title="Gras (Ctrl+B)"><i class="fa-solid fa-bold"></i></button>
+                <button onclick="exec('italic')" id="btn-italic" title="Italique (Ctrl+I)"><i class="fa-solid fa-italic"></i></button>
+                <button onclick="exec('underline')" id="btn-underline" title="Souligné (Ctrl+U)"><i class="fa-solid fa-underline"></i></button>
+                <button onclick="exec('strikethrough')" title="Barré"><i class="fa-solid fa-strikethrough"></i></button>
+            </div>
+
+            <div class="tool-group">
+                <select onchange="exec('fontName', this.value)" id="font-family">
+                    <option value="Arial" selected>Arial</option>
+                    <option value="Segoe UI">Segoe UI</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Helvetica">Helvetica</option>
+                    <option value="Calibri">Calibri</option>
+                </select>
+                <select onchange="exec('fontSize', this.value)" id="font-size">
+                    <option value="1">Petit</option>
+                    <option value="3" selected>Normal</option>
+                    <option value="5">Grand</option>
+                    <option value="7">Enorme</option>
+                </select>
+            </div>
+
+            <div class="tool-group">
+                <button onclick="exec('justifyLeft')" title="Aligner à gauche"><i class="fa-solid fa-align-left"></i></button>
+                <button onclick="exec('justifyCenter')" title="Centrer"><i class="fa-solid fa-align-center"></i></button>
+                <button onclick="exec('justifyRight')" title="Aligner à droite"><i class="fa-solid fa-align-right"></i></button>
+                <button onclick="exec('justifyFull')" title="Justifier"><i class="fa-solid fa-align-justify"></i></button>
+            </div>
+
+            <div class="tool-group">
+                <button onclick="exec('insertUnorderedList')" title="Liste à puces"><i class="fa-solid fa-list-ul"></i></button>
+                <button onclick="exec('insertOrderedList')" title="Liste numérotée"><i class="fa-solid fa-list-ol"></i></button>
+                <button onclick="exec('outdent')" title="Réduire le retrait"><i class="fa-solid fa-outdent"></i></button>
+                <button onclick="exec('indent')" title="Augmenter le retrait"><i class="fa-solid fa-indent"></i></button>
+            </div>
+
+            <div class="tool-group">
+                <input type="color" onchange="exec('foreColor', this.value)" value="#0078d4" title="Couleur du texte" style="width:30px; height:30px; border:none; background:transparent; cursor:pointer;">
+                <input type="color" onchange="exec('backColor', this.value)" value="#ffffff" title="Surlignage" style="width:30px; height:30px; border:none; background:transparent; cursor:pointer;">
+                <button onclick="toggleTheme()" title="Mode sombre/clair">
+                    <i class="fa-solid fa-circle-half-stroke"></i>
+                </button>
+            </div>
+
+            <div class="tool-group">
+                <select onchange="insertElement(this.value); this.value=''" style="min-width: 110px;">
+                    <option value="" disabled selected>➕ Insérer</option>
+                    <option value="link">🔗 Lien</option>
+                    <option value="image">🖼️ Image</option>
+                    <option value="table">📊 Tableau</option>
+                    <option value="hr">➖ Ligne</option>
+                    <option value="date">📅 Date</option>
+                </select>
+            </div>
+        </header>
+
+        <main class="viewport" id="scroll-zone">
+            <article id="editor" contenteditable="true" spellcheck="true">
+                <h1>Bienvenue dans XType-beta</h1>
+                <p style="font-family: Arial, sans-serif;">Ceci est votre nouveau standard de rédaction professionnelle. Votre travail est automatiquement sauvegardé dans votre navigateur. La police par défaut est maintenant Arial pour une meilleure lisibilité.</p>
+                <h2>Fonctionnalités :</h2>
+                <ul>
+                    <li><strong>Formatage riche</strong> avec barre d'outils complète</li>
+                    <li><strong>Sauvegarde automatique</strong> dans le navigateur</li>
+                    <li><strong>Export</strong> PDF, HTML, TXT, DOC, RTF</li>
+                    <li><strong>Thème clair/sombre</strong></li>
+                    <li><strong>Système de notifications corrigé</strong> avec animations fluides</li>
+                    <li><strong>Police Arial par défaut</strong> pour un confort de lecture optimal</li>
+                    <li><strong>Menu Fichier complet</strong> avec options d'exportation multiples</li>
+                </ul>
+                <blockquote>Une expérience d'édition digne de Microsoft Word, directement dans votre navigateur, avec la clarté de la police Arial.</blockquote>
+            </article>
+        </main>
+
+        <footer class="status-bar no-print">
+            <span id="word-count">Mots: 0</span>
+            <span style="opacity:0.7">💾 Sauvegardé automatiquement</span>
+            <span id="doc-stats">Caractères: 0</span>
+        </footer>
+
+        <div class="sidebar-tools no-print">
+            <button class="sidebar-btn" onclick="createNewDoc()" title="Nouveau document"><i class="fa-regular fa-file"></i></button>
+            <button class="sidebar-btn" onclick="handleExport('html')" title="Exporter en HTML"><i class="fa-solid fa-code"></i></button>
+            <button class="sidebar-btn" onclick="handleExport('txt')" title="Exporter en TXT"><i class="fa-solid fa-file-lines"></i></button>
+            <button class="sidebar-btn" onclick="handleExport('pdf')" title="Exporter en PDF"><i class="fa-solid fa-print"></i></button>
+            <button class="sidebar-btn" onclick="scrollToTop()" title="Haut de page"><i class="fa-solid fa-arrow-up"></i></button>
+        </div>
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        let notificationId = 0;
+
+        // SYSTÈME DE NOTIFICATIONS CORRIGÉ ET AMÉLIORÉ
+        class NotificationSystem {
+            constructor() {
+                this.container = document.getElementById('notification-container');
+                if (!this.container) {
+                    console.error('Conteneur de notifications non trouvé');
+                    return;
+                }
+                this.notifications = new Map();
+                this.notificationId = 0;
+            }
+
+            show(options) {
+                const id = this.notificationId++;
+                const { title, message, type = 'info', duration = 5000 } = options;
+                
+                // Créer l'élément de notification
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.dataset.id = id;
+                
+                // Déterminer l'icône en fonction du type
+                let iconClass = 'fa-solid fa-circle-info';
+                if (type === 'success') iconClass = 'fa-solid fa-circle-check';
+                else if (type === 'warning') iconClass = 'fa-solid fa-triangle-exclamation';
+                else if (type === 'error') iconClass = 'fa-solid fa-circle-exclamation';
+                
+                // Construire le HTML de la notification
+                notification.innerHTML = `
+                    <div class="notification-icon">
+                        <i class="${iconClass}"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">${title || this.getDefaultTitle(type)}</div>
+                        <div class="notification-message">${message}</div>
+                    </div>
+                    <button class="notification-close" onclick="notificationSystem.close(${id})">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                    <div class="notification-progress" style="animation-duration: ${duration}ms;"></div>
+                `;
+                
+                // Ajouter au conteneur
+                this.container.appendChild(notification);
+                
+                // Sauvegarder la référence
+                this.notifications.set(id, {
+                    element: notification,
+                    timeout: setTimeout(() => {
+                        this.close(id);
+                    }, duration)
+                });
+                
+                return id;
+            }
+
+            getDefaultTitle(type) {
+                switch(type) {
+                    case 'success': return 'Succès';
+                    case 'error': return 'Erreur';
+                    case 'warning': return 'Attention';
+                    default: return 'Information';
+                }
+            }
+
+            close(id) {
+                const notificationData = this.notifications.get(id);
+                if (!notificationData) return;
+                
+                const { element, timeout } = notificationData;
+                
+                // Nettoyer le timeout
+                if (timeout) clearTimeout(timeout);
+                
+                // Animation de sortie
+                element.style.animation = 'slideOut 0.3s ease forwards';
+                
+                // Supprimer après l'animation
+                setTimeout(() => {
+                    if (element.parentNode) {
+                        element.parentNode.removeChild(element);
+                    }
+                    this.notifications.delete(id);
+                }, 300);
+            }
+
+            success(message, title = 'Succès') {
+                return this.show({ type: 'success', title, message });
+            }
+
+            error(message, title = 'Erreur') {
+                return this.show({ type: 'error', title, message, duration: 7000 });
+            }
+
+            info(message, title = 'Information') {
+                return this.show({ type: 'info', title, message });
+            }
+
+            warning(message, title = 'Attention') {
+                return this.show({ type: 'warning', title, message, duration: 6000 });
+            }
+        }
+
+        // Initialisation du système de notifications
+        const notificationSystem = new NotificationSystem();
+
+        // MENU FICHIER
+        function toggleFileMenu() {
+            const menu = document.getElementById('file-menu');
+            if (menu) menu.classList.toggle('show');
+        }
+
+        function closeFileMenu() {
+            const menu = document.getElementById('file-menu');
+            if (menu) menu.classList.remove('show');
+        }
+
+        // Fermer le menu si on clique ailleurs
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.file-menu-container')) {
+                closeFileMenu();
+            }
+        });
+
+        // Raccourcis clavier
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key.toLowerCase()) {
+                        case 'b': e.preventDefault(); exec('bold'); break;
+                        case 'i': e.preventDefault(); exec('italic'); break;
+                        case 'u': e.preventDefault(); exec('underline'); break;
+                        case 'n': e.preventDefault(); createNewDoc(); break;
+                        case 'o': e.preventDefault(); openDocument(); break;
+                        case 's': 
+                            e.preventDefault(); 
+                            if (e.shiftKey) {
+                                showSaveAsDialog();
+                            } else {
+                                saveDocument();
+                            }
+                            break;
+                        case 'p': e.preventDefault(); printDocument(); break;
+                    }
+                }
+            });
+        }
+
+        // Commandes de formatage
+        function exec(cmd, val = null) {
+            document.execCommand(cmd, false, val);
+            editor.focus();
+            updateActiveButtons();
+        }
+
+        // Sauvegarde Auto avec debounce
+        let saveTimeout;
+        editor.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                localStorage.setItem('xtype_pro_data', editor.innerHTML);
+                updateStats();
+                if (notificationSystem) {
+                    notificationSystem.success('Document sauvegardé automatiquement', 'Sauvegarde');
+                }
+            }, 1000);
+        });
+
+        // Mise à jour des statistiques
+        function updateStats() {
+            const text = editor.innerText || '';
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const chars = text.length;
+            document.getElementById('word-count').textContent = `Mots: ${words}`;
+            document.getElementById('doc-stats').textContent = `Caractères: ${chars}`;
+        }
+
+        // Initialisation
+        window.onload = () => {
+            // Vérifier que le système de notification est disponible
+            if (!notificationSystem) {
+                console.error('Erreur: Système de notification non initialisé');
+                return;
+            }
+
+            const saved = localStorage.getItem('xtype_pro_data');
+            if (saved) {
+                editor.innerHTML = saved;
+                notificationSystem.success('Document chargé avec succès');
+            } else {
+                notificationSystem.info('Bienvenue dans XType-beta', 'Nouveau document');
+            }
+            
+            const savedTheme = localStorage.getItem('xtype_theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                notificationSystem.info(`Thème ${savedTheme === 'dark' ? 'sombre' : 'clair'} activé`);
+            }
+            
+            updateStats();
+            setupKeyboardShortcuts();
+            updateActiveButtons();
+            
+            // Initialiser la police par défaut
+            const fontSelect = document.getElementById('font-family');
+            if (fontSelect) fontSelect.value = 'Arial';
+        };
+
+        function updateActiveButtons() {
+            const bold = document.getElementById('btn-bold');
+            const italic = document.getElementById('btn-italic');
+            const underline = document.getElementById('btn-underline');
+            
+            try {
+                if (bold) bold.classList.toggle('active', document.queryCommandState('bold'));
+                if (italic) italic.classList.toggle('active', document.queryCommandState('italic'));
+                if (underline) underline.classList.toggle('active', document.queryCommandState('underline'));
+            } catch(e) {}
+        }
+
+        // Fonctions du menu Fichier
+        function createNewDoc() {
+            if(confirm("Êtes-vous sûr de vouloir effacer tout le document ? Cette action est irréversible.")) {
+                editor.innerHTML = '<h1>Bienvenue dans XType-beta</h1><p>Nouveau document créé.</p>';
+                localStorage.setItem('xtype_pro_data', editor.innerHTML);
+                updateStats();
+                editor.focus();
+                if (notificationSystem) notificationSystem.success('Nouveau document créé');
+            }
+        }
+
+        function openDocument() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.html,.txt,.rtf';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    let content = e.target.result;
+                    if (file.name.endsWith('.txt')) {
+                        content = content.split('\n').map(line => `<p>${line}</p>`).join('');
+                    }
+                    editor.innerHTML = content;
+                    localStorage.setItem('xtype_pro_data', editor.innerHTML);
+                    if (notificationSystem) notificationSystem.success('Document ouvert avec succès');
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+            closeFileMenu();
+        }
+
+        function saveDocument() {
+            localStorage.setItem('xtype_pro_data', editor.innerHTML);
+            if (notificationSystem) notificationSystem.success('Document sauvegardé dans le navigateur');
+            closeFileMenu();
+        }
+
+        function showSaveAsDialog() {
+            const format = prompt("Choisissez le format d'export (html, txt, pdf, doc, rtf):", "html");
+            if (format) {
+                handleExport(format);
+            }
+            closeFileMenu();
+        }
+
+        function printDocument() {
+            window.print();
+            if (notificationSystem) notificationSystem.success('Document envoyé à l\'impression');
+            closeFileMenu();
+        }
+
+        // Export
+        function handleExport(type) {
+            const filename = "XType_Document_" + new Date().toISOString().slice(0,10);
+            
+            if (type === 'pdf') {
+                window.print();
+                notificationSystem.success('Document prêt pour impression/PDF');
+            } 
+            else if (type === 'html') {
+                const style = document.querySelector('style').innerHTML;
+                const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>${filename}</title>
+<style>body { max-width: 210mm; margin: 20mm auto; padding: 0 20px; font-family: Arial, sans-serif; }</style>
+</head>
+<body>${editor.innerHTML}</body>
+</html>`;
+                downloadFile(html, filename + ".html", 'text/html');
+                notificationSystem.success('Document exporté en HTML');
+            } 
+            else if (type === 'txt') {
+                const content = editor.innerText;
+                downloadFile(content, filename + ".txt", 'text/plain');
+                notificationSystem.success('Document exporté en TXT');
+            }
+            else if (type === 'doc') {
+                const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>${filename}</title>
+<style>body { font-family: Arial, sans-serif; }</style>
+</head>
+<body>${editor.innerHTML}</body>
+</html>`;
+                downloadFile(html, filename + ".doc", 'application/msword');
+                notificationSystem.success('Document exporté en DOC');
+            }
+            else if (type === 'rtf') {
+                const rtfContent = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Arial;}}\\f0\\fs24 ${editor.innerText.replace(/\n/g, '\\par ')} }`;
+                downloadFile(rtfContent, filename + ".rtf", 'application/rtf');
+                notificationSystem.success('Document exporté en RTF');
+            }
+            closeFileMenu();
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], {type: mimeType});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function insertElement(type) {
+            editor.focus();
+            switch(type) {
+                case 'link':
+                    const url = prompt("URL du lien:", "https://");
+                    if (url) {
+                        exec('createLink', url);
+                        notificationSystem.success('Lien inséré');
+                    }
+                    break;
+                case 'image':
+                    const imgUrl = prompt("URL de l'image:", "https://via.placeholder.com/300");
+                    if (imgUrl) {
+                        exec('insertImage', imgUrl);
+                        notificationSystem.success('Image insérée');
+                    }
+                    break;
+                case 'table':
+                    const rows = prompt("Nombre de lignes:", "3");
+                    if (!rows) return;
+                    const cols = prompt("Nombre de colonnes:", "3");
+                    if (rows && cols) {
+                        let table = '<table border="1" style="width:100%; border-collapse: collapse;">';
+                        for(let i=0; i<rows; i++) {
+                            table += '<tr>';
+                            for(let j=0; j<cols; j++) table += '<td style="padding:8px;">Cellule</td>';
+                            table += '</tr>';
+                        }
+                        table += '</table><p><br></p>';
+                        exec('insertHTML', table);
+                        notificationSystem.success('Tableau inséré');
+                    }
+                    break;
+                case 'hr':
+                    exec('insertHorizontalRule');
+                    notificationSystem.success('Ligne insérée');
+                    break;
+                case 'date':
+                    const date = new Date().toLocaleDateString('fr-FR');
+                    exec('insertText', date);
+                    notificationSystem.success('Date insérée');
+                    break;
+            }
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('xtype_theme', next);
+            notificationSystem.info(`Thème ${next === 'dark' ? 'sombre' : 'clair'} activé`);
+        }
+
+        function scrollToTop() {
+            document.querySelector('.viewport').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Détection des changements de sélection
+        document.addEventListener('selectionchange', () => {
+            setTimeout(updateActiveButtons, 10);
+        });
+
+        // Gestion des erreurs
+        window.addEventListener('error', (e) => {
+            if (notificationSystem) {
+                notificationSystem.error('Une erreur est survenue: ' + e.message);
+            }
+        });
+    </script>
+</body>
+</html>
